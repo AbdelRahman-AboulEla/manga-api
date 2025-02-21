@@ -83,7 +83,7 @@ app.get("/api/manga/:mangaSlug", async (req, res) => {
   res.json(result);
 });
 
-// API endpoint to get chapter images
+
 app.get("/api/chapter/:mangaSlug/:chapterNumber", async (req, res) => {
   const mangaSlug = req.params.mangaSlug;
   const chapterNumber = req.params.chapterNumber;
