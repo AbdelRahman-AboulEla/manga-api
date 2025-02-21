@@ -1,21 +1,28 @@
 // Import modules using ES6 syntax
 import express from "express";
-import axios from "axios";
 import { load } from "cheerio"; // Corrected import for cheerio
 import cors from "cors";
-import puppeteer from "puppeteer"; // Import Puppeteer
+import puppeteer from "puppeteer";
 
 // Initialize Express app
 const app = express();
 app.use(cors());
 const port = 3000;
 
-// Function to fetch chapter images (using axios)
+// Function to fetch chapter images using Puppeteer
 async function getChapterImages(mangaSlug, chapterNumber) {
   const url = `https://lekmanga.net/manga/${mangaSlug}/${chapterNumber}`;
   try {
-    const response = await axios.get(url);
-    const $ = load(response.data);
+    // Launch Puppeteer with sandbox options (necessary in many serverless environments)
+    const browser = await puppeteer.launch({
+      args: ["--no-sandbox", "--disable-setuid-sandbox"],
+    });
+    const page = await browser.newPage();
+    await page.goto(url, { waitUntil: "networkidle2" });
+
+    // Get page HTML and parse it with cheerio
+    const html = await page.content();
+    const $ = load(html);
     const imgTags = $(
       ".reading-content .page-break.no-gaps img.wp-manga-chapter-img"
     );
@@ -23,6 +30,8 @@ async function getChapterImages(mangaSlug, chapterNumber) {
     imgTags.each((index, element) => {
       imageUrls.push($(element).attr("src"));
     });
+
+    await browser.close();
     return { chapter: chapterNumber, images: imageUrls };
   } catch (error) {
     console.error(error);
@@ -34,28 +43,27 @@ async function getChapterImages(mangaSlug, chapterNumber) {
 async function getMangaChapters(mangaSlug) {
   const url = `https://lekmanga.net/manga/${mangaSlug}`;
   try {
-    // Launch Puppeteer with options required in serverless environments like Vercel
     const browser = await puppeteer.launch({
       args: ["--no-sandbox", "--disable-setuid-sandbox"],
     });
     const page = await browser.newPage();
-    // Navigate to the URL and wait for network to be idle
     await page.goto(url, { waitUntil: "networkidle2" });
-    // Get page HTML content
+
     const html = await page.content();
-    // Use cheerio to parse the HTML
     const $ = load(html);
+    // Extract chapter links (adjust selector based on website structure)
     const chapterLinks = $("ul.main.version-chap li.wp-manga-chapter");
     const chapters = [];
     chapterLinks.each((index, element) => {
-      const chapterLink = $(element).find("a"); // Find the <a> tag inside the <li>
-      const chapterNumber = chapterLink.text().trim(); // Extract the chapter number
-      const chapterUrl = chapterLink.attr("href"); // Extract the chapter URL
+      const chapterLink = $(element).find("a");
+      const chapterNumber = chapterLink.text().trim();
+      const chapterUrl = chapterLink.attr("href");
       chapters.push({
         number: chapterNumber,
         url: chapterUrl,
       });
     });
+
     await browser.close();
     return { manga: mangaSlug, chapters };
   } catch (error) {
