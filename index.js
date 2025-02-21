@@ -2,25 +2,27 @@
 import express from "express";
 import { load } from "cheerio"; // Corrected import for cheerio
 import cors from "cors";
-import puppeteer from "puppeteer";
+import puppeteer from "puppeteer-core";
+import chromium from "chrome-aws-lambda";
 
 // Initialize Express app
 const app = express();
 app.use(cors());
 const port = 3000;
 
-// Function to fetch chapter images using Puppeteer
+// Function to fetch chapter images using Puppeteer with chrome-aws-lambda
 async function getChapterImages(mangaSlug, chapterNumber) {
   const url = `https://lekmanga.net/manga/${mangaSlug}/${chapterNumber}`;
   try {
-    // Launch Puppeteer with sandbox options (necessary in many serverless environments)
     const browser = await puppeteer.launch({
-      args: ["--no-sandbox", "--disable-setuid-sandbox"],
+      args: chromium.args,
+      defaultViewport: chromium.defaultViewport,
+      executablePath: await chromium.executablePath,
+      headless: chromium.headless,
     });
     const page = await browser.newPage();
     await page.goto(url, { waitUntil: "networkidle2" });
 
-    // Get page HTML and parse it with cheerio
     const html = await page.content();
     const $ = load(html);
     const imgTags = $(
@@ -39,19 +41,21 @@ async function getChapterImages(mangaSlug, chapterNumber) {
   }
 }
 
-// Function to fetch manga chapters using Puppeteer
+// Function to fetch manga chapters using Puppeteer with chrome-aws-lambda
 async function getMangaChapters(mangaSlug) {
   const url = `https://lekmanga.net/manga/${mangaSlug}`;
   try {
     const browser = await puppeteer.launch({
-      args: ["--no-sandbox", "--disable-setuid-sandbox"],
+      args: chromium.args,
+      defaultViewport: chromium.defaultViewport,
+      executablePath: await chromium.executablePath,
+      headless: chromium.headless,
     });
     const page = await browser.newPage();
     await page.goto(url, { waitUntil: "networkidle2" });
 
     const html = await page.content();
     const $ = load(html);
-    // Extract chapter links (adjust selector based on website structure)
     const chapterLinks = $("ul.main.version-chap li.wp-manga-chapter");
     const chapters = [];
     chapterLinks.each((index, element) => {
