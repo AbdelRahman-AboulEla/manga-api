@@ -2,9 +2,10 @@
 import express from "express";
 import axios from "axios";
 import { load } from "cheerio"; // Corrected import for cheerio
-
+import cors from "cors";
 // Initialize Express app
 const app = express();
+app.use(cors());
 const port = 3000;
 
 // Function to fetch chapter details
