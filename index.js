@@ -35,7 +35,6 @@ async function getChapterImages(mangaSlug, chapterNumber) {
   }
 }
 
-// Function to fetch all chapters of a manga
 async function getMangaChapters(mangaSlug) {
   const url = `https://lekmanga.net/manga/${mangaSlug}`;
   try {
