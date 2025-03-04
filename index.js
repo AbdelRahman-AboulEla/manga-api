@@ -15,10 +15,10 @@ async function getChapterImages(mangaSlug, chapterNumber) {
   const url = `https://lekmanga.net/manga/${mangaSlug}/${chapterNumber}`;
   try {
     const browser = await puppeteer.launch({
-      args: chromium.args,
+      args: [...chromium.args, "--hide-scrollbars", "--disable-web-security"],
       defaultViewport: chromium.defaultViewport,
       executablePath: await chromium.executablePath,
-      headless: chromium.headless,
+      headless: true,
     });
     const page = await browser.newPage();
     await page.goto(url, { waitUntil: "networkidle2" });
@@ -46,10 +46,10 @@ async function getMangaChapters(mangaSlug) {
   const url = `https://lekmanga.net/manga/${mangaSlug}`;
   try {
     const browser = await puppeteer.launch({
-      args: chromium.args,
+      args: [...chromium.args, "--hide-scrollbars", "--disable-web-security"],
       defaultViewport: chromium.defaultViewport,
       executablePath: await chromium.executablePath,
-      headless: chromium.headless,
+      headless: true,
     });
     const page = await browser.newPage();
     await page.goto(url, { waitUntil: "networkidle2" });
@@ -82,7 +82,6 @@ app.get("/api/manga/:mangaSlug", async (req, res) => {
   const result = await getMangaChapters(mangaSlug);
   res.json(result);
 });
-
 
 app.get("/api/chapter/:mangaSlug/:chapterNumber", async (req, res) => {
   const mangaSlug = req.params.mangaSlug;
