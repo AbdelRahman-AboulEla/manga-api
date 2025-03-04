@@ -2,28 +2,19 @@
 import express from "express";
 import { load } from "cheerio"; // Corrected import for cheerio
 import cors from "cors";
-import puppeteer from "puppeteer-core";
-import chromium from "chrome-aws-lambda";
+import axios from "axios"; // Add Axios import
 
 // Initialize Express app
 const app = express();
 app.use(cors());
 const port = 3000;
 
-// Function to fetch chapter images using Puppeteer with chrome-aws-lambda
+// Function to fetch chapter images using Axios and Cheerio
 async function getChapterImages(mangaSlug, chapterNumber) {
   const url = `https://lekmanga.net/manga/${mangaSlug}/${chapterNumber}`;
   try {
-    const browser = await puppeteer.launch({
-      args: [...chromium.args, "--hide-scrollbars", "--disable-web-security"],
-      defaultViewport: chromium.defaultViewport,
-      executablePath: await chromium.executablePath,
-      headless: true,
-    });
-    const page = await browser.newPage();
-    await page.goto(url, { waitUntil: "networkidle2" });
-
-    const html = await page.content();
+    const response = await axios.get(url);
+    const html = response.data;
     const $ = load(html);
     const imgTags = $(
       ".reading-content .page-break.no-gaps img.wp-manga-chapter-img"
@@ -33,7 +24,6 @@ async function getChapterImages(mangaSlug, chapterNumber) {
       imageUrls.push($(element).attr("src"));
     });
 
-    await browser.close();
     return { chapter: chapterNumber, images: imageUrls };
   } catch (error) {
     console.error(error);
@@ -41,20 +31,12 @@ async function getChapterImages(mangaSlug, chapterNumber) {
   }
 }
 
-// Function to fetch manga chapters using Puppeteer with chrome-aws-lambda
+// Function to fetch manga chapters using Axios and Cheerio
 async function getMangaChapters(mangaSlug) {
   const url = `https://lekmanga.net/manga/${mangaSlug}`;
   try {
-    const browser = await puppeteer.launch({
-      args: [...chromium.args, "--hide-scrollbars", "--disable-web-security"],
-      defaultViewport: chromium.defaultViewport,
-      executablePath: await chromium.executablePath,
-      headless: true,
-    });
-    const page = await browser.newPage();
-    await page.goto(url, { waitUntil: "networkidle2" });
-
-    const html = await page.content();
+    const response = await axios.get(url);
+    const html = response.data;
     const $ = load(html);
     const chapterLinks = $("ul.main.version-chap li.wp-manga-chapter");
     const chapters = [];
@@ -68,7 +50,6 @@ async function getMangaChapters(mangaSlug) {
       });
     });
 
-    await browser.close();
     return { manga: mangaSlug, chapters };
   } catch (error) {
     console.error(error);
