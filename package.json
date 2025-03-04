@@ -3,9 +3,11 @@
     "axios": "^1.8.1",
     "cheerio": "^1.0.0",
     "chrome-aws-lambda": "^10.1.0",
+    "cloudscraper": "^4.6.0",
     "cors": "^2.8.5",
     "express": "^4.21.2",
-    "puppeteer-core": "^24.2.1"
+    "puppeteer-core": "^24.2.1",
+    "request": "^2.88.2"
   },
   "name": "ma",
   "version": "1.0.0",

@@ -2,18 +2,18 @@
 import express from "express";
 import { load } from "cheerio"; // Corrected import for cheerio
 import cors from "cors";
-import axios from "axios"; // Add Axios import
+import cloudscraper from "cloudscraper"; // Add cloudscraper import
 
 // Initialize Express app
 const app = express();
 app.use(cors());
 const port = 3000;
 
-// Function to fetch chapter images using Axios and Cheerio with retry mechanism
+// Function to fetch chapter images using cloudscraper and Cheerio with retry mechanism
 async function getChapterImages(mangaSlug, chapterNumber, retries = 3) {
   const url = `https://lekmanga.net/manga/${mangaSlug}/${chapterNumber}`;
   try {
-    const response = await axios.get(url, {
+    const response = await cloudscraper.get(url, {
       headers: {
         "User-Agent":
           "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3",
@@ -23,7 +23,7 @@ async function getChapterImages(mangaSlug, chapterNumber, retries = 3) {
         Referer: "https://lekmanga.net/",
       },
     });
-    const html = response.data;
+    const html = response;
     const $ = load(html);
     const imgTags = $(
       ".reading-content .page-break.no-gaps img.wp-manga-chapter-img"
@@ -35,7 +35,7 @@ async function getChapterImages(mangaSlug, chapterNumber, retries = 3) {
 
     return { chapter: chapterNumber, images: imageUrls };
   } catch (error) {
-    if (error.response && error.response.status === 403 && retries > 0) {
+    if (error.statusCode === 403 && retries > 0) {
       console.warn(`Retrying... (${3 - retries + 1})`);
       await new Promise((resolve) => setTimeout(resolve, 1000)); // Wait for 1 second before retrying
       return getChapterImages(mangaSlug, chapterNumber, retries - 1);
@@ -45,11 +45,11 @@ async function getChapterImages(mangaSlug, chapterNumber, retries = 3) {
   }
 }
 
-// Function to fetch manga chapters using Axios and Cheerio with retry mechanism
+// Function to fetch manga chapters using cloudscraper and Cheerio with retry mechanism
 async function getMangaChapters(mangaSlug, retries = 3) {
   const url = `https://lekmanga.net/manga/${mangaSlug}`;
   try {
-    const response = await axios.get(url, {
+    const response = await cloudscraper.get(url, {
       headers: {
         "User-Agent":
           "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3",
@@ -59,7 +59,7 @@ async function getMangaChapters(mangaSlug, retries = 3) {
         Referer: "https://lekmanga.net/",
       },
     });
-    const html = response.data;
+    const html = response;
     const $ = load(html);
     const chapterLinks = $("ul.main.version-chap li.wp-manga-chapter");
     const chapters = [];
@@ -75,7 +75,7 @@ async function getMangaChapters(mangaSlug, retries = 3) {
 
     return { manga: mangaSlug, chapters };
   } catch (error) {
-    if (error.response && error.response.status === 403 && retries > 0) {
+    if (error.statusCode === 403 && retries > 0) {
       console.warn(`Retrying... (${3 - retries + 1})`);
       await new Promise((resolve) => setTimeout(resolve, 1000)); // Wait for 1 second before retrying
       return getMangaChapters(mangaSlug, retries - 1);
