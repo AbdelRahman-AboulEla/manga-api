@@ -13,7 +13,16 @@ const port = 3000;
 async function getChapterImages(mangaSlug, chapterNumber) {
   const url = `https://lekmanga.net/manga/${mangaSlug}/${chapterNumber}`;
   try {
-    const response = await axios.get(url);
+    const response = await axios.get(url, {
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3",
+        "Accept-Language": "en-US,en;q=0.9",
+        "Accept-Encoding": "gzip, deflate, br",
+        Connection: "keep-alive",
+        Referer: "https://lekmanga.net/",
+      },
+    });
     const html = response.data;
     const $ = load(html);
     const imgTags = $(
@@ -35,7 +44,16 @@ async function getChapterImages(mangaSlug, chapterNumber) {
 async function getMangaChapters(mangaSlug) {
   const url = `https://lekmanga.net/manga/${mangaSlug}`;
   try {
-    const response = await axios.get(url);
+    const response = await axios.get(url, {
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3",
+        "Accept-Language": "en-US,en;q=0.9",
+        "Accept-Encoding": "gzip, deflate, br",
+        Connection: "keep-alive",
+        Referer: "https://lekmanga.net/",
+      },
+    });
     const html = response.data;
     const $ = load(html);
     const chapterLinks = $("ul.main.version-chap li.wp-manga-chapter");
