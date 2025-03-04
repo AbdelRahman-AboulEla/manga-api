@@ -9,8 +9,8 @@ const app = express();
 app.use(cors());
 const port = 3000;
 
-// Function to fetch chapter images using Axios and Cheerio
-async function getChapterImages(mangaSlug, chapterNumber) {
+// Function to fetch chapter images using Axios and Cheerio with retry mechanism
+async function getChapterImages(mangaSlug, chapterNumber, retries = 3) {
   const url = `https://lekmanga.net/manga/${mangaSlug}/${chapterNumber}`;
   try {
     const response = await axios.get(url, {
@@ -35,13 +35,18 @@ async function getChapterImages(mangaSlug, chapterNumber) {
 
     return { chapter: chapterNumber, images: imageUrls };
   } catch (error) {
+    if (error.response && error.response.status === 403 && retries > 0) {
+      console.warn(`Retrying... (${3 - retries + 1})`);
+      await new Promise((resolve) => setTimeout(resolve, 1000)); // Wait for 1 second before retrying
+      return getChapterImages(mangaSlug, chapterNumber, retries - 1);
+    }
     console.error(error);
     return { error: "Failed to fetch chapter images" };
   }
 }
 
-// Function to fetch manga chapters using Axios and Cheerio
-async function getMangaChapters(mangaSlug) {
+// Function to fetch manga chapters using Axios and Cheerio with retry mechanism
+async function getMangaChapters(mangaSlug, retries = 3) {
   const url = `https://lekmanga.net/manga/${mangaSlug}`;
   try {
     const response = await axios.get(url, {
@@ -70,6 +75,11 @@ async function getMangaChapters(mangaSlug) {
 
     return { manga: mangaSlug, chapters };
   } catch (error) {
+    if (error.response && error.response.status === 403 && retries > 0) {
+      console.warn(`Retrying... (${3 - retries + 1})`);
+      await new Promise((resolve) => setTimeout(resolve, 1000)); // Wait for 1 second before retrying
+      return getMangaChapters(mangaSlug, retries - 1);
+    }
     console.error(error);
     return { error: "Failed to fetch manga chapters" };
   }
