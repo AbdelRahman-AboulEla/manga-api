@@ -33,6 +33,12 @@ async function getChapterImages(mangaSlug, chapterNumber, retries = 3) {
       imageUrls.push($(element).attr("src"));
     });
 
+    if (imageUrls.length === 0 && retries > 0) {
+      console.warn(`Retrying... (${3 - retries + 1})`);
+      await new Promise((resolve) => setTimeout(resolve, 1000)); // Wait for 1 second before retrying
+      return getChapterImages(mangaSlug, chapterNumber, retries - 1);
+    }
+
     return { chapter: chapterNumber, images: imageUrls };
   } catch (error) {
     if (error.statusCode === 403 && retries > 0) {
@@ -72,6 +78,12 @@ async function getMangaChapters(mangaSlug, retries = 3) {
         url: chapterUrl,
       });
     });
+
+    if (chapters.length === 0 && retries > 0) {
+      console.warn(`Retrying... (${3 - retries + 1})`);
+      await new Promise((resolve) => setTimeout(resolve, 1000)); // Wait for 1 second before retrying
+      return getMangaChapters(mangaSlug, retries - 1);
+    }
 
     return { manga: mangaSlug, chapters };
   } catch (error) {
